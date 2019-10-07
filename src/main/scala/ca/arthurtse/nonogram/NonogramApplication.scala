@@ -11,11 +11,11 @@ object NonogramApplication extends JFXApp {
 
   stage = new PrimaryStage {
     title = "Nonogram Puzzler"
-    width = 400
-    height = 400
+    width = 370
+    height = 450
     scene = new Scene {
-      fill = LightGreen
-      content = gridView.grid
+      fill = White
+      content = gridView.view
     }
   }
 }
