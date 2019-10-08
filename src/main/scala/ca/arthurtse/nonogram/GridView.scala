@@ -10,12 +10,12 @@ import scalafx.scene.paint.Color._
 import scala.collection.mutable.ArrayBuffer
 
 class GridView(val model: GridModel) {
-  private var grid: Array[Array[Tile]] = Array.ofDim[Tile](model.rows, model.cols)
-  private var selected: ObjectProperty[model.Cell] = ObjectProperty(model.Box)
-  private var dragX: Option[Int] = None
-  private var dragY: Option[Int] = None
-  private var dragFill: Option[Boolean] = None
-  private var dragged: ArrayBuffer[(Int, Int)] = ArrayBuffer()
+  private val grid: Array[Array[Tile]] = Array.ofDim[Tile](model.rows, model.cols)
+  private val selected: ObjectProperty[model.Cell] = ObjectProperty(model.Box)
+  private var dragFill: Option[model.Cell] = None
+  private var dragRow: Option[Int] = None
+  private var dragCol: Option[Int] = None
+  private var dragged: Set[(Int, Int)] = Set()
   private var dragDir: Option[Direction] = None
   private val tileSize = 30
 
@@ -60,64 +60,104 @@ class GridView(val model: GridModel) {
       y = col * tileSize
       stroke = Black
       strokeWidth = 1
-      onMousePressed = _ => {
-        printf("Pressed: (%d, %d)\n", row, col)
+      onMouseClicked = _ => {
+        printf("Clicked: (%d, %d)\n", row, col)
         selected() match {
           case model.Empty =>
             cell match {
-              case model.Empty =>
-                dragged += ((row, col))
-                dragFill = Some(false)
-              case model.Unknown =>
-                dragged += ((row, col))
-                dragFill = Some(true)
+              case model.Empty => fill = White
+              case model.Unknown => fill = Red
             }
           case model.Box =>
             cell match {
-              case model.Box =>
-                dragged += ((row, col))
-                dragFill = Some(false)
-              case model.Unknown =>
-                dragged += ((row, col))
-                dragFill = Some(true)
+              case model.Box => fill = White
+              case model.Unknown => fill = Black
             }
-        }
-      }
-      onMouseClicked = _ => {
-        printf("Clicked: (%d, %d)\n", row, col)
-        selected.value match {
-          case model.Empty => fill = Grey
-          case model.Box => fill = Black
-          case model.Unknown => fill = White
         }
       }
       onDragDetected = _ => {
         printf("Drag Start: (%d, %d)\n", row, col)
         startFullDrag
+        selected() match {
+          case model.Empty =>
+            cell match {
+              case model.Empty =>
+                dragged += ((row, col))
+                dragFill = Some(model.Unknown)
+                dragRow = Some(row)
+                dragCol = Some(col)
+              case model.Unknown =>
+                dragged += ((row, col))
+                dragFill = Some(model.Empty)
+                dragRow = Some(row)
+                dragCol = Some(col)
+            }
+          case model.Box =>
+            cell match {
+              case model.Box =>
+                dragged += ((row, col))
+                dragFill = Some(model.Unknown)
+                dragRow = Some(row)
+                dragCol = Some(col)
+              case model.Unknown =>
+                dragged += ((row, col))
+                dragFill = Some(model.Box)
+                dragRow = Some(row)
+                dragCol = Some(col)
+            }
+        }
       }
       onMouseDragOver = _ => {
         printf("Drag Over: (%d, %d)\n", row, col)
         dragDir match {
           case None =>
-            if (dragX.get == row) {
-              if (col < dragY.get) dragDir = Some(Up) else dragDir = Some(Down)
-              dragged += ((row, col))
-            } else if (dragY.get == col) {
-              if (row < dragX.get) dragDir = Some(Left) else dragDir = Some(Right)
-              dragged += ((row, col))
+            if (dragRow.get == row) {
+              if (col < dragCol.get) dragDir = Some(Up) else dragDir = Some(Down)
+              if ((cell == model.Unknown && !dragFill.contains(model.Unknown)) ||
+                (cell != model.Unknown && dragFill.contains(model.Unknown)))
+                dragged += ((row, col))
+            } else if (dragCol.get == col) {
+              if (row < dragRow.get) dragDir = Some(Left) else dragDir = Some(Right)
+              if ((cell == model.Unknown && !dragFill.contains(model.Unknown)) ||
+                (cell != model.Unknown && dragFill.contains(model.Unknown)))
+                dragged += ((row, col))
             }
           case Some(Up) =>
-            if (row == dragX.get && col < dragY.get) dragged += ((row, col))
+            if (row == dragRow.get && col < dragCol.get &&
+              ((cell == model.Unknown && !dragFill.contains(model.Unknown)) ||
+              (cell != model.Unknown && dragFill.contains(model.Unknown))))
+              dragged += ((row, col))
           case Some(Down) =>
-            if (row == dragX.get && col > dragY.get) dragged += ((row, col))
+            if (row == dragRow.get && col > dragCol.get &&
+              ((cell == model.Unknown && !dragFill.contains(model.Unknown)) ||
+                (cell != model.Unknown && dragFill.contains(model.Unknown))))
+              dragged += ((row, col))
           case Some(Left) =>
-            if (col == dragY.get && row < dragX.get) dragged += ((row, col))
+            if (col == dragCol.get && row < dragRow.get &&
+              ((cell == model.Unknown && !dragFill.contains(model.Unknown)) ||
+                (cell != model.Unknown && dragFill.contains(model.Unknown))))
+              dragged += ((row, col))
           case Some(Right) =>
-            if (col == dragY.get && row < dragX.get) dragged += ((row, col))
+            if (col == dragCol.get && row < dragRow.get &&
+              ((cell == model.Unknown && !dragFill.contains(model.Unknown)) ||
+                (cell != model.Unknown && dragFill.contains(model.Unknown))))
+              dragged += ((row, col))
         }
       }
       onMouseDragReleased = _ => {
         printf("Drag End: (%d, %d)\n", row, col)
+        for (t <- dragged) {
+          dragFill match {
+            case Some(model.Box) => grid(t._1)(t._2).view.fill = Black
+            case Some(model.Empty) => grid(t._1)(t._2).view.fill = White
+            case Some(model.Unknown) => grid(t._1)(t._2).view.fill = Red
+          }
+        }
+        dragFill = None
+        dragRow = None
+        dragCol = None
+        dragged = Set()
+        dragDir = None
       }
     }
   }
