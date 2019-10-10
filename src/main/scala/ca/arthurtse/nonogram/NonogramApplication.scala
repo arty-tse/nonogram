@@ -1,5 +1,6 @@
 package ca.arthurtse.nonogram
 
+import ca.arthurtse.nonogram.model.GridModel
 import scalafx.application.JFXApp
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.scene.Scene
