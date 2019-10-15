@@ -7,8 +7,5 @@ class GridModel(val rows: Int, val cols: Int, var rowHints: Array[Array[Int]], v
 
   def status(row: Int, col: Int): ObjectProperty[TileState] = grid(row)(col)
 
-  def update(row: Int, col: Int, state: TileState): Unit = {
-    printf("update: r: %d, c: %d, " + state + "\n", row, col)
-    grid(row)(col)() = state
-  }
+  def update(row: Int, col: Int, state: TileState): Unit = grid(row)(col)() = state
 }
