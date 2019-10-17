@@ -19,3 +19,5 @@ lazy val javaFXModules = Seq("base", "controls", "fxml", "graphics", "media", "s
 libraryDependencies ++= javaFXModules.map( m =>
   "org.openjfx" % s"javafx-$m" % "12.0.2" classifier osName
 )
+
+libraryDependencies += "com.squareup.moshi" % "moshi" % "1.8.0"

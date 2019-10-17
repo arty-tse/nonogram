@@ -2,17 +2,19 @@ package ca.arthurtse.nonogram.view
 
 import ca.arthurtse.nonogram.model._
 import scalafx.beans.property.ObjectProperty
-import scalafx.geometry.Pos.Center
-import scalafx.scene.control.Button
+import scalafx.geometry.Insets
+import scalafx.geometry.Pos._
+import scalafx.scene.control.{RadioButton, ToggleGroup}
 import scalafx.scene.layout.{HBox, Pane, VBox}
 import scalafx.scene.paint.Color
 import scalafx.scene.paint.Color._
 import scalafx.scene.shape.{Line, Rectangle, Shape}
+import scalafx.scene.text.Text
 import scalafx.scene.{Group, Node}
 
 class GridView(val model: GridModel) {
   private val grid: Array[Array[Tile]] = Array.ofDim[Tile](model.rows, model.cols)
-  private val selected: ObjectProperty[TileState] = ObjectProperty(Filled)
+  private val selState: ObjectProperty[TileState] = ObjectProperty(Filled)
   private var dragFill: Option[TileState] = None
   private var dragRow: Option[Int] = None
   private var dragCol: Option[Int] = None
@@ -28,39 +30,88 @@ class GridView(val model: GridModel) {
     }
   }
 
-  private val fillButton: Button = new Button {
-    prefHeight = 60
-    prefWidth = 60
-    text = "Fill"
-    onMouseClicked = _ => selected() = Filled
+  private val rowHints = new VBox {
+    style = "-fx-background-color: red"
+    alignment = BottomRight
   }
-
-  private val emptyButton: Button = new Button {
-    prefHeight = 60
-    prefWidth = 60
-    text = "Clear"
-    onMouseClicked = _ => selected() = Empty
-  }
-
-  val view: VBox = new VBox {
-    spacing = 30
-    children = List(gridView, new HBox {
+  for (hint <- model.rowHints) {
+    val rowBox = new HBox {
+      prefHeight = tileSize
       spacing = 10
-      children = List(fillButton, emptyButton)
-    })
-    alignment = Center
+      alignment = CenterRight
+      padding = Insets(0, 10, 0, 10)
+    }
+    for (clue <- hint) rowBox.children.add(new Text(clue.toString))
+    rowHints.children.add(rowBox)
+  }
+
+  private val colHints = new HBox {
+    style = "-fx-background-color: green"
+    alignment = BottomCenter
+  }
+  for (hint <- model.colHints) {
+    val colBox = new VBox {
+      prefWidth = tileSize
+      spacing = 10
+      alignment = BottomCenter
+      padding = Insets(10, 0, 10, 0)
+    }
+    for (clue <- hint) colBox.children.add(new Text(clue.toString))
+    colHints.children.add(colBox)
+  }
+
+  private val btnGroup = new ToggleGroup {
+    selectedToggle.onChange((_, _, newValue) => selState() = newValue.getUserData.asInstanceOf[TileState])
+  }
+
+  private val fillButton: RadioButton = new RadioButton {
+    prefHeight = 40
+    prefWidth = 55
+    text = "Fill"
+    userData = Filled
+    toggleGroup = btnGroup
+  }
+
+  private val emptyButton: RadioButton = new RadioButton {
+    prefHeight = 40
+    prefWidth = 55
+    text = "Clear"
+    userData = Empty
+    toggleGroup = btnGroup
+  }
+
+  val view: Pane = new VBox {
+    spacing = 20
+    alignment = CenterRight
+    children = List(new HBox {
+      alignment = BottomCenter
+      children = List(rowHints, new VBox {
+        alignment = Center
+        children = List(colHints, gridView)
+      })
+    },
+      new HBox {
+        style = "-fx-background-color: yellow"
+        spacing = 20
+        children = List(fillButton, emptyButton)
+        alignment = Center
+      })
   }
 
   private def updateNode(row: Int, col: Int, state: TileState): Unit = {
     model.update(row, col, state)
     val tile: Tile = grid(row)(col)
     val rep: Tile = state match {
-        case Filled => new FilledTile(row, col)
-        case Empty => new EmptyTile(row, col)
-        case Unknown => new UnknownTile(row, col)
-      }
+      case Filled => new FilledTile(row, col)
+      case Empty => new EmptyTile(row, col)
+      case Unknown => new UnknownTile(row, col)
+    }
     grid(row)(col) = rep
     gridView.children.set(tile.index, rep)
+  }
+
+  private def checkSoln(): Unit = {
+
   }
 
   trait Tile extends Node {
@@ -75,36 +126,46 @@ class GridView(val model: GridModel) {
     val tStrokeWidth: Int = 1
 
     onMouseClicked = _ => {
-      selected() match {
+      selState() match {
         case Filled =>
           model.status(row, col)() match {
-            case Filled => updateNode(row, col, Unknown)
+            case Filled =>
+              updateNode(row, col, Unknown)
+              checkSoln()
             case Empty =>
-            case Unknown => updateNode(row, col, Filled)
+            case Unknown =>
+              updateNode(row, col, Filled)
+              checkSoln()
           }
         case Empty =>
           model.status(row, col)() match {
             case Filled =>
-            case Empty => updateNode(row, col, Unknown)
-            case Unknown => updateNode(row, col, Empty)
+            case Empty =>
+              updateNode(row, col, Unknown)
+              checkSoln()
+            case Unknown =>
+              updateNode(row, col, Empty)
+              checkSoln()
           }
         case Unknown =>
       }
     }
     onDragDetected = _ => {
       startFullDrag
-      selected() match {
+      selState() match {
         case Filled =>
           model.status(row, col)() match {
             case Filled =>
               dragFill = Some(Unknown)
               dragRow = Some(row)
               dragCol = Some(col)
+              dragged += ((row, col))
             case Empty =>
             case Unknown =>
               dragFill = Some(Filled)
               dragRow = Some(row)
               dragCol = Some(col)
+              dragged += ((row, col))
           }
         case Empty =>
           model.status(row, col)() match {
@@ -113,10 +174,12 @@ class GridView(val model: GridModel) {
               dragFill = Some(Unknown)
               dragRow = Some(row)
               dragCol = Some(col)
+              dragged += ((row, col))
             case Unknown =>
               dragFill = Some(Empty)
               dragRow = Some(row)
               dragCol = Some(col)
+              dragged += ((row, col))
           }
         case Unknown =>
       }
@@ -137,7 +200,7 @@ class GridView(val model: GridModel) {
               if (dragDir.contains(Left) && model.status(row, col)() == model.status(dragRow.get, dragCol.get)()) {
                 dragged += ((row, col))
               } else if (!dragDir.contains(Left)) {
-                dragged = Set()
+                dragged = Set((dragRow.get, dragCol.get))
                 for (i <- col until dragCol.get) {
                   if (model.status(dragRow.get, dragCol.get)() == model.status(row, i)()) dragged += ((row, col))
                 }
@@ -147,7 +210,7 @@ class GridView(val model: GridModel) {
               if (dragDir.contains(Right) && model.status(row, col)() == model.status(dragRow.get, dragCol.get)()) {
                 dragged += ((row, col))
               } else if (!dragDir.contains(Right)) {
-                dragged = Set()
+                dragged = Set((dragRow.get, dragCol.get))
                 for (i <- col + 1 to dragCol.get) {
                   if (model.status(dragRow.get, dragCol.get)() == model.status(row, i)()) dragged += ((row, col))
                 }
@@ -159,7 +222,7 @@ class GridView(val model: GridModel) {
               if (dragDir.contains(Up) && model.status(row, col)() == model.status(dragRow.get, dragCol.get)()) {
                 dragged += ((row, col))
               } else if (!dragDir.contains(Up)) {
-                dragged = Set()
+                dragged = Set((dragRow.get, dragCol.get))
                 for (i <- row until dragRow.get) {
                   if (model.status(dragRow.get, dragCol.get)() == model.status(row, i)()) dragged += ((row, col))
                 }
@@ -169,7 +232,7 @@ class GridView(val model: GridModel) {
               if (dragDir.contains(Down) && model.status(row, col)() == model.status(dragRow.get, dragCol.get)()) {
                 dragged += ((row, col))
               } else if (!dragDir.contains(Down)) {
-                dragged = Set()
+                dragged = Set((dragRow.get, dragCol.get))
                 for (i <- row + 1 to dragRow.get) {
                   if (model.status(dragRow.get, dragCol.get)() == model.status(row, i)()) dragged += ((row, col))
                 }
@@ -180,12 +243,6 @@ class GridView(val model: GridModel) {
       }
     }
     onMouseDragReleased = _ => {
-      dragFill match {
-        case None =>
-        case Some(Filled) => updateNode(dragRow.get, dragCol.get, Filled)
-        case Some(Empty) => updateNode(dragRow.get, dragCol.get, Empty)
-        case Some(Unknown) => updateNode(dragRow.get, dragCol.get, Unknown)
-      }
       for (t <- dragged) {
         dragFill match {
           case None =>
@@ -199,6 +256,7 @@ class GridView(val model: GridModel) {
       dragCol = None
       dragged = Set()
       dragDir = None
+      checkSoln()
     }
   }
 
