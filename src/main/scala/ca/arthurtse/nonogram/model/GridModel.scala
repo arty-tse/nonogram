@@ -1,11 +1,33 @@
 package ca.arthurtse.nonogram.model
 
-import scalafx.beans.property.ObjectProperty
+import ca.arthurtse.nonogram.model.PuzzleData._
 
-class GridModel(val rows: Int, val cols: Int, var rowHints: Array[Array[Int]], var colHints: Array[Array[Int]]) {
-  var grid: Array[Array[ObjectProperty[TileState]]] = Array.fill(rows, cols)(ObjectProperty(Unknown))
+class GridModel(private val puzzle: Puzzle, private val legend: Legend) {
+  val rows: Int = puzzle.rows
+  val cols: Int = puzzle.cols
+  val rowHints: Array[Array[Int]] = puzzle.rowHints
+  val colHints: Array[Array[Int]] = puzzle.colHints
+  var grid: Array[Array[TileState]] = Array.fill(rows, cols)(Unknown)
 
-  def status(row: Int, col: Int): ObjectProperty[TileState] = grid(row)(col)
+  def status(row: Int, col: Int): TileState = grid(row)(col)
 
-  def update(row: Int, col: Int, state: TileState): Unit = grid(row)(col)() = state
+  def update(row: Int, col: Int, state: TileState): Unit = grid(row)(col) = state
+
+  def checkSolution(): Boolean = {
+    for (i <- 0 until rows) {
+      for (j <- 0 until cols) {
+        grid(i)(j) match {
+          case Filled => if (puzzle.solution(i)(j) != legend.filled) {
+            println("trash me: r: " + i + ", c: " + j + ", g: " + grid(i)(j))
+            return false
+          }
+          case _ => if (puzzle.solution(i)(j) != legend.empty) {
+            println("fill me: r: " + i + ", c: " + j + ", g: " + grid(i)(j))
+            return false
+          }
+        }
+      }
+    }
+    true
+  }
 }
