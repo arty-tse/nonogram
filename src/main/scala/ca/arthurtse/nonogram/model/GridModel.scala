@@ -7,7 +7,7 @@ class GridModel(private val puzzle: Puzzle, private val legend: Legend) {
   val cols: Int = puzzle.cols
   val rowHints: Array[Array[Int]] = puzzle.rowHints
   val colHints: Array[Array[Int]] = puzzle.colHints
-  var grid: Array[Array[TileState]] = Array.fill(rows, cols)(Unknown)
+  val grid: Array[Array[TileState]] = Array.fill(rows, cols)(Unknown)
 
   def status(row: Int, col: Int): TileState = grid(row)(col)
 
@@ -17,14 +17,8 @@ class GridModel(private val puzzle: Puzzle, private val legend: Legend) {
     for (i <- 0 until rows) {
       for (j <- 0 until cols) {
         grid(i)(j) match {
-          case Filled => if (puzzle.solution(i)(j) != legend.filled) {
-            println("trash me: r: " + i + ", c: " + j + ", g: " + grid(i)(j))
-            return false
-          }
-          case _ => if (puzzle.solution(i)(j) != legend.empty) {
-            println("fill me: r: " + i + ", c: " + j + ", g: " + grid(i)(j))
-            return false
-          }
+          case Filled => if (puzzle.solution(i)(j) != legend.filled) return false
+          case _ => if (puzzle.solution(i)(j) != legend.empty) return false
         }
       }
     }

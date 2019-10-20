@@ -14,7 +14,6 @@ import scalafx.scene.text.Text
 import scalafx.scene.{Group, Node}
 
 class GridView(val model: GridModel, retToMenu: () => Unit) {
-  private val grid: Array[Array[Tile]] = Array.ofDim[Tile](model.rows, model.cols)
   private val selState: ObjectProperty[TileState] = ObjectProperty(Filled)
   private var dragFill: Option[TileState] = None
   private var dragRow: Option[Int] = None
@@ -26,8 +25,7 @@ class GridView(val model: GridModel, retToMenu: () => Unit) {
   private val gridView = new Pane
   for (i <- 0 until model.rows) {
     for (j <- 0 until model.cols) {
-      grid(i)(j) = new UnknownTile(i, j)
-      gridView.children.add(grid(i)(j))
+      gridView.children.add(new UnknownTile(i, j))
     }
   }
 
@@ -102,14 +100,12 @@ class GridView(val model: GridModel, retToMenu: () => Unit) {
 
   private def updateNode(row: Int, col: Int, state: TileState): Unit = {
     model.update(row, col, state)
-    val tile: Tile = grid(row)(col)
     val rep: Tile = state match {
       case Filled => new FilledTile(row, col)
       case Empty => new EmptyTile(row, col)
       case Unknown => new UnknownTile(row, col)
     }
-    grid(row)(col) = rep
-    gridView.children.set(tile.index, rep)
+    gridView.children.set(row * model.cols + col, rep)
   }
 
   private def checkSoln(): Unit = {
@@ -127,11 +123,10 @@ class GridView(val model: GridModel, retToMenu: () => Unit) {
   trait Tile extends Node {
     val row: Int
     val col: Int
-    val index: Int = row * model.cols + col
     val tWidth: Int = tileSize
     val tHeight: Int = tileSize
-    val tX: Int = row * tileSize
-    val tY: Int = col * tileSize
+    val tX: Int = col * tileSize
+    val tY: Int = row * tileSize
     val tStroke: Color = Black
     val tStrokeWidth: Int = 1
 
