@@ -1,0 +1,15 @@
+#menu-pane {
+    -fx-background-color: white;
+    -fx-padding: 30;
+    -fx-hgap: 30;
+    -fx-vgap: 30;
+    -fx-orientation: horizontal;
+    -fx-alignment: top-center;
+}
+
+.puzzle-pic {
+    -fx-fill: chartreuse;
+}
+
+.puzzle-text {
+}
