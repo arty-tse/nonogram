@@ -1,3 +1,7 @@
+@font-face {
+    src: url('fonts/Roboto-Regular.ttf');
+}
+
 #menu-pane {
     -fx-background-color: white;
     -fx-padding: 30;
@@ -12,4 +16,5 @@
 }
 
 .puzzle-text {
+    -fx-font: 1em Roboto;
 }

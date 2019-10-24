@@ -4,7 +4,6 @@ import ca.arthurtse.nonogram.model.PuzzleData.Puzzle
 import ca.arthurtse.nonogram.model._
 import ca.arthurtse.nonogram.view.{GridView, MenuView}
 import com.squareup.moshi.Moshi
-import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.scene.Scene
