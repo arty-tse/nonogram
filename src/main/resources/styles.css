@@ -8,7 +8,8 @@
     -fx-hgap: 30;
     -fx-vgap: 30;
     -fx-orientation: horizontal;
-    -fx-alignment: top-center;
+    -fx-column-halignment: left;
+    -fx-row-valignment: top;
 }
 
 .puzzle-pic {
@@ -16,5 +17,41 @@
 }
 
 .puzzle-text {
+    -fx-font: 1em Roboto;
+}
+
+.puzzle-item {
+    -fx-spacing: 10;
+    -fx-alignment: center;
+}
+
+#grid-pane {
+}
+
+#row-hints {
+    -fx-background-color: red;
+    -fx-alignment: bottom-left;
+}
+
+.row-hint {
+    -fx-pref-height: 30;
+    -fx-spacing: 10;
+    -fx-alignment: center-right;
+    -fx-padding: 0 10 0 10;
+}
+
+#col-hints {
+    -fx-background-color: green;
+    -fx-alignment: bottom-center;
+}
+
+.col-hint {
+    -fx-pref-width: 30;
+    -fx-spacing: 10;
+    -fx-alignment: bottom-center;
+    -fx-padding: 10 0 10 0;
+}
+
+.hint-text {
     -fx-font: 1em Roboto;
 }

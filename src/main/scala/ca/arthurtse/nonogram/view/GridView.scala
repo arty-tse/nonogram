@@ -22,7 +22,9 @@ class GridView(val model: GridModel, retToMenu: () => Unit) {
   private var dragDir: Option[Direction] = None
   private val tileSize = 30
 
-  private val gridView = new Pane
+  private val gridView = new Pane {
+    id = "grid-pane"
+  }
   for (i <- 0 until model.rows) {
     for (j <- 0 until model.cols) {
       gridView.children.add(new UnknownTile(i, j))
@@ -30,32 +32,28 @@ class GridView(val model: GridModel, retToMenu: () => Unit) {
   }
 
   private val rowHints = new VBox {
-    style = "-fx-background-color: red"
-    alignment = BottomRight
+    id = "row-hints"
   }
   for (hint <- model.rowHints) {
     val rowBox = new HBox {
-      prefHeight = tileSize
-      spacing = 10
-      alignment = CenterRight
-      padding = Insets(0, 10, 0, 10)
+      styleClass += "row-hint"
     }
-    for (clue <- hint) rowBox.children.add(new Text(clue.toString))
+    for (clue <- hint) rowBox.children.add(new Text(clue.toString) {
+      styleClass += "hint-text"
+    })
     rowHints.children.add(rowBox)
   }
 
   private val colHints = new HBox {
-    style = "-fx-background-color: green"
-    alignment = BottomCenter
+    id = "col-hints"
   }
   for (hint <- model.colHints) {
     val colBox = new VBox {
-      prefWidth = tileSize
-      spacing = 10
-      alignment = BottomCenter
-      padding = Insets(10, 0, 10, 0)
+      styleClass += "col-hint"
     }
-    for (clue <- hint) colBox.children.add(new Text(clue.toString))
+    for (clue <- hint) colBox.children.add(new Text(clue.toString) {
+      styleClass += "hint-text"
+    })
     colHints.children.add(colBox)
   }
 

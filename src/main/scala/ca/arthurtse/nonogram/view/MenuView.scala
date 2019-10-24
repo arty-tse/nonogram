@@ -2,11 +2,7 @@ package ca.arthurtse.nonogram.view
 
 import ca.arthurtse.nonogram.model.PuzzleData
 import ca.arthurtse.nonogram.model.PuzzleData.Puzzle
-import scalafx.geometry.Insets
-import scalafx.geometry.Orientation._
-import scalafx.geometry.Pos.Center
 import scalafx.scene.layout.{FlowPane, Pane, VBox}
-import scalafx.scene.paint.Color._
 import scalafx.scene.shape.Rectangle
 import scalafx.scene.text.Text
 
@@ -21,15 +17,18 @@ class MenuView(puzzleData: PuzzleData, goToPuzzle: Puzzle => Unit) {
       height = 150
       styleClass += "puzzle-pic"
     }
-    val name = new Text(puzzle.name) {
+    val name = new Text(nameChanger(puzzle.name)) {
       styleClass += "puzzle-text"
     }
     val item = new VBox {
-      spacing = 10
-      alignment = Center
+      styleClass += "puzzle-item"
       children = List(img, name)
       onMouseClicked = _ => goToPuzzle(puzzle)
     }
     view.children.add(item)
+  }
+
+  def nameChanger(str: String): String = {
+    str.split('-').map(_.capitalize).mkString(" ")
   }
 }
