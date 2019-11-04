@@ -1,6 +1,6 @@
-package ca.arthurtse.nonogram.model
+package ca.arthurtse.nonogram.menu
 
-import ca.arthurtse.nonogram.model.PuzzleData._
+import ca.arthurtse.nonogram.menu.PuzzleData.{Legend, Puzzle}
 
 class PuzzleData {
   val legend: Legend = null
@@ -8,6 +8,7 @@ class PuzzleData {
 }
 
 object PuzzleData {
+
   class Legend {
     val filled: Char = ' '
     val empty: Char = ' '
@@ -21,4 +22,5 @@ object PuzzleData {
     val colHints: Array[Array[Int]] = null
     val solution: Array[Array[Char]] = null
   }
+
 }

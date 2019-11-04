@@ -2,8 +2,19 @@
     src: url('fonts/Roboto-Regular.ttf');
 }
 
-#menu-pane {
-    -fx-background-color: white;
+.root {
+    bg: #ffffff;
+    dark: #292929;
+    outlines: #000000;
+    selected: #9672cc;
+    grid-light: #ffffff;
+    grid-dark: #292929;
+    stroke-width: 1;
+    thick-stroke-width: 3;
+}
+
+#menuPane {
+    -fx-background-color: bg;
     -fx-padding: 30;
     -fx-hgap: 30;
     -fx-vgap: 30;
@@ -12,46 +23,90 @@
     -fx-row-valignment: top;
 }
 
-.puzzle-pic {
+.puzzlePic {
     -fx-fill: chartreuse;
 }
 
-.puzzle-text {
+.puzzleText {
     -fx-font: 1em Roboto;
+    -fx-fill: dark;
 }
 
-.puzzle-item {
+.puzzleItem {
     -fx-spacing: 10;
     -fx-alignment: center;
 }
 
-#grid-pane {
+#tileGrid {
+    -fx-background-color: bg;
+    -fx-spacing: 30;
+    -fx-alignment: center;
 }
 
-#row-hints {
-    -fx-background-color: red;
-    -fx-alignment: bottom-left;
+#gridPane {
+    -fx-hgap: 10;
+    -fx-vgap: 10;
 }
 
-.row-hint {
+#rowHints > .rowHint {
     -fx-pref-height: 30;
     -fx-spacing: 10;
     -fx-alignment: center-right;
     -fx-padding: 0 10 0 10;
 }
 
-#col-hints {
-    -fx-background-color: green;
-    -fx-alignment: bottom-center;
-}
-
-.col-hint {
+#colHints > .colHint {
     -fx-pref-width: 30;
     -fx-spacing: 10;
     -fx-alignment: bottom-center;
     -fx-padding: 10 0 10 0;
 }
 
-.hint-text {
+.hintText {
     -fx-font: 1em Roboto;
+}
+
+#gridPane {
+    -fx-alignment: top-left;
+}
+
+.tile {
+    -fx-stroke: outlines;
+    -fx-stroke-width: stroke-width;
+}
+
+.unknown {
+    -fx-fill: grid-light;
+}
+
+.filled {
+    -fx-fill: grid-dark;
+}
+
+.empty {
+    -fx-fill: grid-light;
+}
+
+.emptyCross {
+    -fx-stroke: grid-dark;
+}
+
+#buttonBox {
+    -fx-spacing: 20;
+    -fx-alignment: center;
+}
+
+.tileButton {
+    -fx-pref-width: 50;
+    -fx-pref-height: 50;
+    -fx-background-radius: 25;
+    -fx-background-color: bg;
+    -fx-border-radius: 25;
+    -fx-border-width: 5;
+    -fx-border-color: dark;
+    -fx-content-display: graphic-only;
+}
+
+.tileButton:selected {
+    -fx-background-color: selected;
 }

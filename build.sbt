@@ -21,3 +21,7 @@ libraryDependencies ++= javaFXModules.map( m =>
 )
 
 libraryDependencies += "com.squareup.moshi" % "moshi" % "1.8.0"
+
+scalacOptions += "-Ymacro-annotations"
+
+libraryDependencies += "org.scalafx" %% "scalafxml-core-sfx8" % "0.5"
