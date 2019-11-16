@@ -1,39 +1,42 @@
 package ca.arthurtse.nonogram.puzzle
 
 import ca.arthurtse.nonogram.NonogramApplication
+import scalafx.Includes._
+import scalafx.animation.Timeline
 import scalafx.beans.property.ObjectProperty
 import scalafx.collections.ObservableBuffer
-import scalafx.scene.Group
 import scalafx.scene.control.Alert.AlertType
-import scalafx.scene.control.{Alert, ButtonType, RadioButton, ToggleGroup}
-import scalafx.scene.layout.{HBox, Pane, Region, VBox}
-import scalafx.scene.shape.{Line, Rectangle, Shape}
+import scalafx.scene.control.{Alert, ButtonType, ToggleGroup}
+import scalafx.scene.layout._
+import scalafx.scene.paint.Color
+import scalafx.scene.shape.{Circle, Line, Shape, StrokeLineCap}
 import scalafx.scene.text.Text
 import scalafxml.core.macros.sfxml
 
 @sfxml
-class PuzzleController(private val tileGrid: Pane, private val colHints: HBox, private val rowHints: VBox,
-                       private val btnGroup: ToggleGroup,
-                       private val fillButton: RadioButton, private val emptyButton: RadioButton,
-                       private val model: PuzzleModel) {
+class PuzzleController(private val tileGrid: GridPane, private val colHints: HBox, private val rowHints: VBox,
+                       private val buttonGroup: ToggleGroup, private val model: PuzzleModel) {
+  private val tileInterval: Int = 5
+  private val tileSize: Int = 30
   private var selState: TileState = Filled
-  btnGroup.selectedToggle.onChange((_, _, tog) =>
-    tog.getUserData match {
-      case "Filled" => selState = Filled
-      case "Empty" => selState = Empty
-      case _ => selState = Unknown
-    })
   private val grid: Array[Array[Tile]] = Array.ofDim(model.rows, model.cols)
   private var dragFill: Option[TileState] = None
   private var dragStart: Option[Tile] = None
   private var dragged: Set[Tile] = Set()
   private var dragDir: Option[Direction] = None
-  private val tileSize: Int = 30
+
+  buttonGroup.selectedToggle.onChange((_, _, tog) =>
+    tog.getUserData match {
+      case "Filled" => selState = Filled
+      case "Empty" => selState = Empty
+      case _ => selState = Unknown
+    })
+
   for (i <- 0 until model.rows) {
     for (j <- 0 until model.cols) {
       val tile: Tile = new Tile(i, j)
       grid(i)(j) = tile
-      tileGrid.children.add(tile)
+      tileGrid.add(tile, j, i)
     }
   }
 
@@ -56,95 +59,44 @@ class PuzzleController(private val tileGrid: Pane, private val colHints: HBox, p
     colHints.children.add(colBox)
   }
 
-  class Tile(val row: Int, val col: Int) extends Group {
-    val tX: Int = col * tileSize
-    val tY: Int = row * tileSize
+  class Tile(val row: Int, val col: Int) extends StackPane {
+    val x: Int = col * tileSize
+    val y: Int = row * tileSize
+    val tile: TileView = new TileView(row, col)
+    var cross: Shape = Shape.union(new CrossLine(x + 10, y + 10, x + tileSize - 10, y + tileSize - 10),
+      new CrossLine(x + 10, y + tileSize - 10, x + tileSize - 10, y + 10))
     var state: ObjectProperty[TileState] = ObjectProperty(Unknown)
     state <== model.status(row, col)
-    state.onChange((_, _, newValue) =>
-      newValue match {
-        case Filled =>
-          children = new TileView(tX, tY) {
-            styleClass = ObservableBuffer("filled", "tile")
-          }
-        case Empty =>
-          children = List(new TileView(tX, tY) {
-            styleClass = ObservableBuffer("empty", "tile")
-          }, Shape.union(new Line {
-            styleClass = ObservableBuffer("emptyCross")
-            startX = tX
-            startY = tY
-            endX = tX + tileSize
-            endY = tY + tileSize
-          }, new Line {
-            styleClass = ObservableBuffer("emptyCross")
-            startX = tX
-            startY = tY + tileSize
-            endX = tX + tileSize
-            endY = tY
-          }))
-        case Unknown =>
-          children = new TileView(tX, tY) {
-            styleClass = ObservableBuffer("unknown", "tile")
-          }
-      })
-    children = new TileView(tX, tY) {
-      styleClass = ObservableBuffer("unknown", "tile")
-    }
+    state.onChange((_, _, newVal) => {
+      tile.changeState(newVal)
+      if (newVal != Empty) children -= cross else children += cross
+    })
+    children = tile
 
     onMouseClicked = _ => {
-      selState match {
-        case Filled =>
-          state() match {
-            case Filled =>
-              updateNode(Unknown)
-              checkSoln()
-            case Empty =>
-            case Unknown =>
-              updateNode(Filled)
-              checkSoln()
-          }
-        case Empty =>
-          state() match {
-            case Filled =>
-            case Empty =>
-              updateNode(Unknown)
-              checkSoln()
-            case Unknown =>
-              updateNode(Empty)
-              checkSoln()
-          }
-        case Unknown =>
+      if (selState == state() && selState != Unknown) {
+        updateNode(Unknown)
+      } else if (selState == Filled && state() == Unknown) {
+        updateNode(Filled)
+      } else if (selState == Empty && state() == Unknown) {
+        updateNode(Empty)
       }
+      checkSoln()
     }
     onDragDetected = _ => {
       startFullDrag
-      selState match {
-        case Filled =>
-          state() match {
-            case Filled =>
-              dragFill = Some(Unknown)
-              dragStart = Some(this)
-              dragged += this
-            case Empty =>
-            case Unknown =>
-              dragFill = Some(Filled)
-              dragStart = Some(this)
-              dragged += this
-          }
-        case Empty =>
-          model.status(row, col)() match {
-            case Filled =>
-            case Empty =>
-              dragFill = Some(Unknown)
-              dragStart = Some(this)
-              dragged += this
-            case Unknown =>
-              dragFill = Some(Empty)
-              dragStart = Some(this)
-              dragged += this
-          }
-        case Unknown =>
+      if (selState == state() && selState != Unknown) {
+        dragFill = Some(Unknown)
+        dragStart = Some(this)
+        dragged += this
+      } else if (selState == Filled && state() == Unknown) {
+        dragFill = Some(Filled)
+        dragStart = Some(this)
+        dragged += this
+      } else if (selState == Empty && state() == Unknown) {
+        dragFill = Some(Empty)
+        dragStart = Some(this)
+        dragged += this
       }
     }
     onMouseDragOver = _ => {
@@ -162,18 +114,16 @@ class PuzzleController(private val tileGrid: Pane, private val colHints: HBox, p
                 dragged += this
               } else if (!dragDir.contains(Left)) {
                 dragDir = Some(Left)
-                for (i <- col to dragStart.get.col) {
+                for (i <- col to dragStart.get.col)
                   if (dragStart.get.state() == grid(row)(i).state()) dragged += grid(row)(i)
-                }
               }
             } else if (col > dragStart.get.col) {
               if (dragDir.contains(Right) && state() == dragStart.get.state()) {
                 dragged += this
               } else if (!dragDir.contains(Right)) {
                 dragDir = Some(Right)
-                for (i <- col + 1 to dragStart.get.col) {
+                for (i <- col + 1 to dragStart.get.col)
                   if (dragStart.get.state() == grid(row)(i).state()) dragged += grid(row)(i)
-                }
               }
             }
           } else if (col == dragStart.get.col) {
@@ -182,27 +132,23 @@ class PuzzleController(private val tileGrid: Pane, private val colHints: HBox, p
                 dragged += this
               } else if (!dragDir.contains(Up)) {
                 dragDir = Some(Up)
-                for (i <- row to dragStart.get.row) {
+                for (i <- row to dragStart.get.row)
                   if (dragStart.get.state() == grid(i)(col).state()) dragged += grid(i)(col)
-                }
               }
             } else if (row > dragStart.get.row) {
               if (dragDir.contains(Down) && state() == dragStart.get.state()) {
                 dragged += this
               } else if (!dragDir.contains(Down)) {
                 dragDir = Some(Down)
-                for (i <- row + 1 to dragStart.get.row) {
+                for (i <- row + 1 to dragStart.get.row)
                   if (dragStart.get.state() == grid(i)(col).state()) dragged += grid(i)(col)
-                }
               }
             }
           }
       }
     }
     onMouseDragReleased = _ => {
-      for (t <- dragged) {
-        dragFill.foreach(f => t.updateNode(f))
-      }
+      for (t <- dragged) dragFill.foreach(f => t.updateNode(f))
       dragFill = None
       dragStart = None
       dragged = Set()
@@ -228,11 +174,60 @@ class PuzzleController(private val tileGrid: Pane, private val colHints: HBox, p
       }
     }
 
-    class TileView(val tvX: Int, val tvY: Int) extends Rectangle {
-      x = tvX
-      y = tvY
-      width = tileSize
-      height = tileSize
+    class TileView(private val row: Int, private val col: Int, private var state: TileState = Unknown) extends Region {
+      styleClass = ObservableBuffer("tile")
+      prefWidth = tileSize
+      prefHeight = tileSize
+      addStateToStyle()
+
+      private var top: Boolean = false
+      private var bot: Boolean = false
+      private var left: Boolean = false
+      private var right: Boolean = false
+
+      if (row % tileInterval == 0) top = true
+      if ((row + 1) % tileInterval == 0 || row == model.rows - 1) bot = true
+      if (col % tileInterval == 0) left = true
+      if ((col + 1) % tileInterval == 0 || col == model.cols - 1) right = true
+
+      private val borderType: String = if (top) if (bot) if (left) if (right) "allBorder" else "topBotLeft"
+      else if (right) "topBotRight" else "topBot"
+      else if (left) if (right) "topLeftRight" else "topLeft"
+      else if (right) "topRight" else "top"
+      else if (bot) if (left) if (right) "botLeftRight" else "botLeft"
+      else if (right) "botRight" else "bot"
+      else if (left) if (right) "leftRight" else "left"
+      else if (right) "right" else "none"
+      addBorderToStyle()
+
+      private def addStateToStyle(): Unit = {
+        state match {
+          case Filled => styleClass += "filled"
+          case Empty => styleClass += "empty"
+          case Unknown => styleClass += "unknown"
+        }
+      }
+
+      private def addBorderToStyle(): Unit = {
+        if (borderType != "none") styleClass += borderType
+      }
+
+      def changeState(newState: TileState): Unit = {
+        state = newState
+        styleClass = ObservableBuffer("tile")
+        addStateToStyle()
+        addBorderToStyle()
+      }
+    }
+
+    class CrossLine(sX: Double, sY: Double, eX: Double, eY: Double) extends Line {
+      startX = sX
+      startY = sY
+      endX = eX
+      endY = eY
+      stroke = Color.web("#141414")
+      strokeLineCap = StrokeLineCap.Round
+      strokeWidth = 5
     }
 
   }

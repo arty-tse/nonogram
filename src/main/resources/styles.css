@@ -3,14 +3,12 @@
 }
 
 .root {
-    bg: #ffffff;
-    dark: #292929;
-    outlines: #000000;
-    selected: #9672cc;
-    grid-light: #ffffff;
-    grid-dark: #292929;
-    stroke-width: 1;
-    thick-stroke-width: 3;
+    bg: #f8f8ff;
+    dark: #141414;
+    outlines: #7d7d7d;
+    selected: #7575ff;
+    grid-light: #f8f8ff;
+    grid-dark: #141414;
 }
 
 #menuPane {
@@ -71,24 +69,80 @@
 }
 
 .tile {
-    -fx-stroke: outlines;
-    -fx-stroke-width: stroke-width;
+    -fx-border-color: outlines;
+    -fx-border-width: 1;
+}
+
+.allBorder {
+    -fx-border-color: dark;
+}
+
+.topBotLeft {
+    -fx-border-color: dark outlines dark dark;
+}
+
+.topBotRight {
+    -fx-border-color: dark dark dark outlines;
+}
+
+.topBot {
+    -fx-border-color: dark outlines dark outlines;
+}
+
+.topLeftRight {
+    -fx-border-color: dark dark outlines dark;
+}
+
+.topLeft {
+    -fx-border-color: dark outlines outlines dark;
+}
+
+.topRight {
+    -fx-border-color: dark dark outlines outlines;
+}
+
+.top {
+    -fx-border-color: dark outlines outlines outlines;
+}
+
+.botLeftRight {
+    -fx-border-color: outlines dark dark dark;
+}
+
+.botLeft {
+    -fx-border-color: outlines outlines dark dark;
+}
+
+.botRight {
+    -fx-border-color: outlines dark dark outlines;
+}
+
+.bot {
+    -fx-border-color: outlines outlines dark outlines;
+}
+
+.leftRight {
+    -fx-border-color: outlines dark outlines dark;
+}
+
+.left {
+    -fx-border-color: outlines outlines outlines dark;
+}
+
+.right {
+    -fx-border-color: outlines dark outlines outlines;
 }
 
 .unknown {
-    -fx-fill: grid-light;
+    -fx-background-color: grid-light;
 }
 
 .filled {
-    -fx-fill: grid-dark;
+    -fx-background-color: grid-dark;
 }
 
 .empty {
-    -fx-fill: grid-light;
-}
-
-.emptyCross {
-    -fx-stroke: grid-dark;
+    -fx-background-color: grid-light;
 }
 
 #buttonBox {

@@ -7,21 +7,13 @@
           xmlns:fx="http://javafx.com/fxml"
           fx:controller="ca.arthurtse.nonogram.puzzle.PuzzleController" fx:id="gridPane">
     <fx:define>
-        <ToggleGroup fx:id="btnGroup"/>
+        <ToggleGroup fx:id="buttonGroup"/>
     </fx:define>
     <HBox fx:id="colHints" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
     <VBox fx:id="rowHints" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-    <Pane fx:id="tileGrid" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+    <GridPane fx:id="tileGrid" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
     <HBox fx:id="buttonBox" GridPane.columnIndex="1" GridPane.rowIndex="2">
-        <RadioButton fx:id="fillButton" styleClass="tileButton" userData="Filled">
-            <toggleGroup>
-                <fx:reference source="btnGroup"/>
-            </toggleGroup>
-        </RadioButton>
-        <RadioButton fx:id="emptyButton" styleClass="tileButton" userData="Empty">
-            <toggleGroup>
-                <fx:reference source="btnGroup"/>
-            </toggleGroup>
-        </RadioButton>
+        <RadioButton fx:id="fillButton" styleClass="tileButton" userData="Filled" toggleGroup="$buttonGroup" selected="true"/>
+        <RadioButton fx:id="emptyButton" styleClass="tileButton" userData="Empty" toggleGroup="$buttonGroup"/>
     </HBox>
 </GridPane>

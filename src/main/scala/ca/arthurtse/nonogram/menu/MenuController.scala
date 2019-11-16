@@ -18,7 +18,7 @@ class MenuController(private val menuPane: FlowPane, private val puzzleData: Puz
   for (puzzle <- puzzleData.puzzles) {
     menuPane.children.add(new VBox {
       styleClass = ObservableBuffer("puzzleItem")
-      children = List(new Rectangle {
+      children = Seq(new Rectangle {
         styleClass = ObservableBuffer("puzzlePic")
         width = 150
         height = 150
