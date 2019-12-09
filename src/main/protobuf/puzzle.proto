@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package ca.arthurtse.nonogram;
+
+message SaveFile {
+    message PuzzleSave {
+        message Rows {
+            enum State {
+                FILLED = 0;
+                EMPTY = 1;
+                UNKNOWN = 2;
+            }
+            repeated State states = 1;
+        }
+        repeated Rows grid = 1;
+    }
+    map<string, PuzzleSave> saves = 1;
+}

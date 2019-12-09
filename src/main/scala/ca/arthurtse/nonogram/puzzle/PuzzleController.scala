@@ -1,6 +1,9 @@
 package ca.arthurtse.nonogram.puzzle
 
 import ca.arthurtse.nonogram.NonogramApplication
+import ca.arthurtse.nonogram.menu.PuzzleData
+import ca.arthurtse.nonogram.puzzle.SaveFile.PuzzleSave
+import ca.arthurtse.nonogram.puzzle.SaveFile.PuzzleSave.Rows.State.{EMPTY, FILLED, UNKNOWN}
 import scalafx.Includes._
 import scalafx.animation.Timeline
 import scalafx.beans.property.ObjectProperty
@@ -15,11 +18,13 @@ import scalafxml.core.macros.sfxml
 
 @sfxml
 class PuzzleController(private val tileGrid: GridPane, private val colHints: HBox, private val rowHints: VBox,
-                       private val buttonGroup: ToggleGroup, private val model: PuzzleModel) {
+                       private val buttonGroup: ToggleGroup, private val puzzle: PuzzleData.Puzzle,
+                       private val legend: PuzzleData.Legend, private val save: Option[SaveFile.PuzzleSave]) {
+  private val model: PuzzleModel = new PuzzleModel(puzzle, legend, save)
   private val tileInterval: Int = 5
   private val tileSize: Int = 30
   private var selState: TileState = Filled
-  private val grid: Array[Array[Tile]] = Array.ofDim(model.rows, model.cols)
+  private val grid: Array[Array[Tile]] = Array.ofDim(puzzle.rows, puzzle.cols)
   private var dragFill: Option[TileState] = None
   private var dragStart: Option[Tile] = None
   private var dragged: Set[Tile] = Set()
@@ -32,15 +37,14 @@ class PuzzleController(private val tileGrid: GridPane, private val colHints: HBo
       case _ => selState = Unknown
     })
 
-  for (i <- 0 until model.rows) {
-    for (j <- 0 until model.cols) {
-      val tile: Tile = new Tile(i, j)
-      grid(i)(j) = tile
-      tileGrid.add(tile, j, i)
+  for (i <- 0 until puzzle.rows) {
+    for (j <- 0 until puzzle.cols) {
+      grid(i)(j) = new Tile(i, j)
+      tileGrid.add(grid(i)(j), j, i)
     }
   }
 
-  for (hint <- model.rowHints) {
+  for (hint <- puzzle.rowHints) {
     val rowBox = new HBox {
       styleClass += "rowHint"
     }
@@ -49,7 +53,7 @@ class PuzzleController(private val tileGrid: GridPane, private val colHints: HBo
     })
     rowHints.children.add(rowBox)
   }
-  for (hint <- model.colHints) {
+  for (hint <- puzzle.colHints) {
     val colBox = new VBox {
       styleClass += "colHint"
     }
@@ -62,11 +66,13 @@ class PuzzleController(private val tileGrid: GridPane, private val colHints: HBo
   class Tile(val row: Int, val col: Int) extends StackPane {
     val x: Int = col * tileSize
     val y: Int = row * tileSize
+    var state: ObjectProperty[TileState] = save.fold(ObjectProperty(Unknown: TileState))(s => ObjectProperty(stateToTileState(s.grid(row).states(col))))
+    state <== model.status(row, col)
     val tile: TileView = new TileView(row, col)
     var cross: Shape = Shape.union(new CrossLine(x + 10, y + 10, x + tileSize - 10, y + tileSize - 10),
       new CrossLine(x + 10, y + tileSize - 10, x + tileSize - 10, y + 10))
-    var state: ObjectProperty[TileState] = ObjectProperty(Unknown)
-    state <== model.status(row, col)
+    tile.changeState(state())
+    if (state() == Empty) children += cross
     state.onChange((_, _, newVal) => {
       tile.changeState(newVal)
       if (newVal != Empty) children -= cross else children += cross
@@ -154,6 +160,14 @@ class PuzzleController(private val tileGrid: GridPane, private val colHints: HBo
       dragged = Set()
       dragDir = None
       checkSoln()
+    }
+
+    private def stateToTileState(state: PuzzleSave.Rows.State): TileState = {
+      state match {
+        case FILLED => Filled
+        case EMPTY => Empty
+        case UNKNOWN => Unknown
+      }
     }
 
     private def updateNode(newState: TileState): Unit = {

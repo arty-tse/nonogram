@@ -1,7 +1,8 @@
 package ca.arthurtse.nonogram.menu
 
 import ca.arthurtse.nonogram.NonogramApplication
-import ca.arthurtse.nonogram.puzzle.PuzzleModel
+import ca.arthurtse.nonogram.menu.PuzzleData.Legend
+import ca.arthurtse.nonogram.puzzle.{PuzzleModel, SaveFile}
 import scalafx.Includes._
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.Scene
@@ -14,7 +15,8 @@ import scalafxml.core.{DependenciesByType, FXMLView}
 import scala.reflect.runtime.universe.typeOf
 
 @sfxml
-class MenuController(private val menuPane: FlowPane, private val puzzleData: PuzzleData) {
+class MenuController(private val menuPane: FlowPane, private val puzzleData: PuzzleData, private val save: SaveFile) {
+  private val legend: Legend = puzzleData.legend
   for (puzzle <- puzzleData.puzzles) {
     menuPane.children.add(new VBox {
       styleClass = ObservableBuffer("puzzleItem")
@@ -22,20 +24,18 @@ class MenuController(private val menuPane: FlowPane, private val puzzleData: Puz
         styleClass = ObservableBuffer("puzzlePic")
         width = 150
         height = 150
-      }, new Text(prettifyName(puzzle.name)) {
+      }, new Text(puzzle.name.split('-').map(_.capitalize).mkString(" ")) {
         styleClass = ObservableBuffer("puzzleText")
       })
-      onMouseClicked = _ => goToPuzzle(puzzle)
+      onMouseClicked = _ => goToPuzzle(puzzle, save.saves.get(puzzle.name))
     })
   }
 
-  def prettifyName(str: String): String = {
-    str.split('-').map(_.capitalize).mkString(" ")
-  }
-
-  def goToPuzzle(puzzle: PuzzleData.Puzzle): Unit = {
+  def goToPuzzle(puzzle: PuzzleData.Puzzle, save: Option[SaveFile.PuzzleSave]): Unit = {
     val root = FXMLView(getClass.getResource("/puzzle.fxml"),
-      new DependenciesByType(Map(typeOf[PuzzleModel] -> new PuzzleModel(puzzle, puzzleData.legend))))
+      new DependenciesByType(Map(typeOf[PuzzleData.Puzzle] -> puzzle,
+        typeOf[PuzzleData.Legend] -> legend,
+        typeOf[Option[SaveFile.PuzzleSave]] -> save)))
     NonogramApplication.changeScene(new Scene(root))
   }
 }
